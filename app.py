@@ -40,11 +40,16 @@ if prompt := st.chat_input("What is up?"):
         message_placeholder = st.empty()
         full_response = ""
 
-        # Stream the response from Claude
+        # Stream the response from Claude with web search
         with client.messages.stream(
-            model="claude-3-haiku-20240307",
+            model="claude-sonnet-4-20250514",
             max_tokens=4096,
-            messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+            messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
+            tools=[{
+                "type": "web_search_20250305",
+                "name": "web_search",
+                "max_uses": 5
+            }]
         ) as stream:
             for text in stream.text_stream:
                 full_response += text
