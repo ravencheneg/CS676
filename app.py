@@ -1,6 +1,23 @@
 import streamlit as st
+import anthropic
+import os
+from dotenv import load_dotenv
 
-st.title("Echo Bot")
+# Load environment variables
+load_dotenv()
+
+st.title("Claude Chatbot")
+
+# Initialize the Anthropic client
+@st.cache_resource
+def get_anthropic_client():
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        st.error("Please set your ANTHROPIC_API_KEY in the .env file")
+        st.stop()
+    return anthropic.Anthropic(api_key=api_key)
+
+client = get_anthropic_client()
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -18,9 +35,22 @@ if prompt := st.chat_input("What is up?"):
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    response = f"Echo: {prompt}"
-    # Display assistant response in chat message container
+    # Get response from Claude
     with st.chat_message("assistant"):
-        st.markdown(response)
+        message_placeholder = st.empty()
+        full_response = ""
+
+        # Stream the response from Claude
+        with client.messages.stream(
+            model="claude-3-haiku-20240307",
+            max_tokens=4096,
+            messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+        ) as stream:
+            for text in stream.text_stream:
+                full_response += text
+                message_placeholder.markdown(full_response + "▌")
+
+        message_placeholder.markdown(full_response)
+
     # Add assistant response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
