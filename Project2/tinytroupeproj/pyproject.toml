@@ -1,0 +1,12 @@
+[project]
+name = "tinytroupeproj"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "tinytroupe>=0.0.1",
+]
+
+[tool.uv.sources]
+tinytroupe = { git = "https://github.com/microsoft/tinytroupe.git" }
